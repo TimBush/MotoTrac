@@ -1,16 +1,11 @@
-const express = require('express')
+// ROUTING FOR INDEX PAGE => /
 
-const router = express.Router()
+const express = require("express");
 
+const router = express.Router();
 
-router.get('/', async (req, res) => {
-    res.send('The homepage')
-})
-
-
-
-
-
-
+router.get("/", async (req, res) => {
+  res.send("homepage");
+});
 
 module.exports = router;
