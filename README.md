@@ -1,6 +1,6 @@
 ## MotoTrac
 
-This API allows you to pull data from a few different motorcycle e-commerce sources. You'll receive straight-forward JSON responses from all endpoints.
+This API allows you to pull data from a few different motorcycle e-commerce sources.
 
 This API opens up a few different use-cases for applications; just to name a few:
 
@@ -11,7 +11,7 @@ This API opens up a few different use-cases for applications; just to name a few
 
 ## Basic Usage
 
-### BASE URL
+### REQUEST & BASE URL
 
 All endpoints in this API will follow the same pattern:
 
@@ -29,17 +29,13 @@ We've tried to keep the API simple to use and have split products into 3 main ca
 - _Part_
 - _Tire_
 
-We've defined these below; it's critical you specify the **correct category** as a parameter when attempting to call the API, so that you get a correct and consistent JSON response.
+We've defined these below; it's critical you specify the **correct category** as a parameter when attempting to call the API, this will insure that you get a correct and consistent JSON response.
 
 ---
 
 ## Responses
 
-All responses will be in JSON.
-
-However, the JSON response structures will vary slightly depending on which _site_ you're pulling data from. This is in part based on how each site chooses to layout and render information. Information provided by each site also varies
-
-See the individual documentation for each site for examples of their specific JSON response.
+The JSON response structures will vary slightly depending on which _site_ you're pulling data from. This is in part based on how each site chooses to layout and render information. Information provided by each site also varies
 
 ---
 
@@ -66,6 +62,6 @@ This would be any part that goes on a motorcycle or some type of accessory that 
 - GPS
 - Luggage/Backpack
 
-### Tires
+### TIRES
 
 If its got rubber and it's round, it probably falls under the tire category.
