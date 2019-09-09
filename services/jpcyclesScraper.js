@@ -1,7 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const errorHandler = require("../helpers/errorGenerator");
+const errorGenerator = require("../helpers/errorGenerator");
 
 class JPCyclesScraper {
   constructor(response) {
@@ -9,12 +9,15 @@ class JPCyclesScraper {
   }
 
   /*
-   * The purpose of this f() is to make an http request
-   * to a given product URL.  It stores this response in this.response
+   * Make an http request to a given product URL. It stores this response in this.response
    */
   async makeHttpRequest(productUrl) {
-    const response = await axios.get(productUrl);
-    this.response = response;
+    try {
+      const response = await axios.get(productUrl);
+      this.response = response;
+    } catch (err) {
+      throw errorGenerator(404, "The URL entered couldn't be found");
+    }
   }
 
   // TODO
@@ -26,8 +29,11 @@ class JPCyclesScraper {
     try {
       await this.makeHttpRequest(productUrl);
 
+      // Axios will typically make a request for a webpage, even if
+      // The client puts in the wrong URL, this IF is an added
+      // Layer to confirm we did get a particular product
       if (this.productName() === "") {
-        return errorHandler(
+        throw errorGenerator(
           404,
           "The given URL doesn't match a JPCycles Product"
         );

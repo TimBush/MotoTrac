@@ -7,7 +7,8 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const errorHandler = require("../helpers/errorGenerator");
+const errorGenerator = require("../helpers/errorGenerator");
+const confirmProductGotten = require("../helpers/confirmProductGotten");
 
 /**
  * The purpose of this class is to gather all product information
@@ -27,9 +28,7 @@ class RevzillaScraper {
       const response = await axios.get(productUrl);
       this.response = response;
     } catch (err) {
-      console.log(err.response.status);
-      // throw the err sent from axios
-      throw err;
+      throw errorGenerator(404, "The URL entered couldn't be found");
     }
   }
 
@@ -202,7 +201,7 @@ class RevzillaScraper {
     };
   }
 
-  // Currently experimental, will be implmented in future versions
+  // EXPERIMENTAL, will be implmented in future versions
   productVideo() {
     const $ = cheerio.load(this.response.data);
 
@@ -235,6 +234,11 @@ class RevzillaScraper {
       // Make HTTP request to the given web page
       await this.makeHttpRequest(productUrl);
 
+      // Axios will typically make a request for a webpage, even if
+      // The client puts in the wrong URL, this IF is an added
+      // Layer to confirm we did get a particular product
+      confirmProductGotten(this.productName(), "Revzilla");
+
       // Gather all product information specific to apparel
       const productName = this.productName();
       const productSizes = this.productSizes();
@@ -251,7 +255,9 @@ class RevzillaScraper {
         reviewInformation,
         imageSource
       };
-    } catch (err) {}
+    } catch (err) {
+      throw err;
+    }
   }
 
   /*
@@ -278,7 +284,7 @@ class RevzillaScraper {
         imageSource
       };
     } catch (err) {
-      return errorHandler(err.response.status);
+      return errorGenerator(err.response.status);
     }
   }
 
@@ -310,7 +316,7 @@ class RevzillaScraper {
         imageSource
       };
     } catch (err) {
-      return errorHandler(err.response.status);
+      return errorGenerator(err.response.status);
     }
   }
 }

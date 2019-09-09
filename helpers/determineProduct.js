@@ -4,6 +4,7 @@ const errorGenerator = require("../helpers/errorGenerator");
  *
  * @param {string} typeOfProduct - The category of product a client wants to scrape for
  * @param {string} scraperToUse - The website scraper Class instance to use
+ * @param {string} queryUrl - The URL of the page we want to scrape
  * @returns An object with product information for the requested product
  */
 module.exports = async (typeOfProduct, scraperToUse, queryUrl) => {

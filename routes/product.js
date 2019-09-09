@@ -19,6 +19,7 @@ router.get("/revzilla/:category", async (req, res, next) => {
 
     res.json(productInfo);
   } catch (err) {
+    // Pass error to handler
     next(err);
   }
 });
@@ -33,6 +34,7 @@ router.get("/jpcycles/:category", async (req, res, next) => {
 
     res.json(productInfo);
   } catch (err) {
+    // Pass error to handler
     next(err);
   }
 });
