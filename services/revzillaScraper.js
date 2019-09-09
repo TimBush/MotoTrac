@@ -7,9 +7,9 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const errorHandler = require("../helpers/errorResponses");
+const errorHandler = require("../helpers/errorGenerator");
 
-/*
+/**
  * The purpose of this class is to gather all product information
  * from Revzilla - name, price, size, etc.
  */
@@ -202,6 +202,7 @@ class RevzillaScraper {
     };
   }
 
+  // Currently experimental, will be implmented in future versions
   productVideo() {
     const $ = cheerio.load(this.response.data);
 
@@ -229,7 +230,7 @@ class RevzillaScraper {
    * and then return a compiled obj of all the products information
    * @returns obj - all the product information for apparel
    */
-  async getAllApparelInfo(productUrl) {
+  async allApparelInfo(productUrl) {
     try {
       // Make HTTP request to the given web page
       await this.makeHttpRequest(productUrl);
@@ -241,7 +242,6 @@ class RevzillaScraper {
       const reviewInformation = this.productRating();
       const imageSource = this.productImage();
       const productColors = this.productVariations();
-      const videoSource = this.productVideo();
 
       return {
         productName,
@@ -249,12 +249,9 @@ class RevzillaScraper {
         productColors,
         price,
         reviewInformation,
-        imageSource,
-        videoSource
+        imageSource
       };
-    } catch (err) {
-      return errorHandler(err.response.status);
-    }
+    } catch (err) {}
   }
 
   /*
@@ -263,7 +260,7 @@ class RevzillaScraper {
    * and then return a compiled obj of all the products information
    * @returns obj - all the product information specific to parts
    */
-  async getAllPartInfo(productUrl) {
+  async allPartInfo(productUrl) {
     try {
       // Make HTTP request to the given web page
       await this.makeHttpRequest(productUrl);
@@ -291,7 +288,7 @@ class RevzillaScraper {
    * and then return a compiled obj of all the products information
    * @returns obj - all the product information specific to tires
    */
-  async getAllTireInfo(productUrl) {
+  async allTireInfo(productUrl) {
     try {
       // Make HTTP request to the given web page
       await this.makeHttpRequest(productUrl);

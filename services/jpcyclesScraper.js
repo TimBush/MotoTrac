@@ -1,7 +1,7 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const errorHandler = require("../helpers/errorResponses");
+const errorHandler = require("../helpers/errorGenerator");
 
 class JPCyclesScraper {
   constructor(response) {
@@ -13,14 +13,8 @@ class JPCyclesScraper {
    * to a given product URL.  It stores this response in this.response
    */
   async makeHttpRequest(productUrl) {
-    try {
-      const response = await axios.get(productUrl);
-      this.response = response;
-    } catch (err) {
-      console.log(err.response.status);
-      // throw the err sent from axios
-      throw err;
-    }
+    const response = await axios.get(productUrl);
+    this.response = response;
   }
 
   // TODO
@@ -29,32 +23,34 @@ class JPCyclesScraper {
   validateUrlToScrape() {}
 
   async allApparelInfo(productUrl) {
-    await this.makeHttpRequest(productUrl);
+    try {
+      await this.makeHttpRequest(productUrl);
 
-    if (this.productName() === "") {
-      return errorHandler(
-        404,
-        "The given URL doesn't match a JPCycles Product"
-      );
+      if (this.productName() === "") {
+        return errorHandler(
+          404,
+          "The given URL doesn't match a JPCycles Product"
+        );
+      }
+
+      const productName = this.productName();
+      const price = this.price();
+      const productSizes = this.productSizes();
+      const reviewInformation = this.productRating();
+      const productColors = this.productColors();
+      const productImages = this.productImage();
+
+      return {
+        productName,
+        productSizes,
+        productColors,
+        price,
+        reviewInformation,
+        productImages
+      };
+    } catch (err) {
+      throw err;
     }
-
-    const productName = this.productName();
-    const price = this.price();
-    const productSizes = this.productSizes();
-    const reviewInformation = this.productRating();
-    const productColors = this.productColors();
-    const imageSource = this.productImage();
-    const videoSource = this.productVideo();
-
-    return {
-      productName,
-      productSizes,
-      productColors,
-      price,
-      reviewInformation,
-      imageSource,
-      videoSource
-    };
   }
 
   productName() {
@@ -201,12 +197,21 @@ class JPCyclesScraper {
     };
   }
 
+  /*
+   * This method is experimental w/ a planned future version release
+   * Currently J&P lays out their videos in an inconsistent order depending
+   * on the product and there is sometimes multiple videos associated w/
+   * a single product
+   */
   productVideo() {
     const $ = cheerio.load(this.response.data);
 
-    const videoUrlELement = "div.youtube > a";
+    const videoPlayerElement = "div.youtube";
 
-    return $(videoUrlELement).attr("href");
+    return $(videoPlayerElement)
+      .last()
+      .children("a")
+      .attr("href");
   }
 }
 
