@@ -4,8 +4,9 @@ const app = express();
 
 const errorMiddleware = require("./middleware/errorHandler");
 
-app.listen(3000, () => {
-  console.log("Server Started");
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server Started - Listening on port ${port} `);
 });
 
 app.set("view engine", "pug");

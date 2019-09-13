@@ -11,6 +11,7 @@ const determineProduct = require("../helpers/determineProduct");
 
 router.get("/revzilla/:category", async (req, res, next) => {
   try {
+    // This gets us all of the products information
     const productInfo = await determineProduct(
       req.params.category.toLowerCase(),
       revzillaScraper,
@@ -26,6 +27,7 @@ router.get("/revzilla/:category", async (req, res, next) => {
 
 router.get("/jpcycles/:category", async (req, res, next) => {
   try {
+    // This gets us all of the products information
     const productInfo = await determineProduct(
       req.params.category.toLowerCase(),
       jpcyclesScraper,

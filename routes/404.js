@@ -10,7 +10,7 @@ const router = express.Router();
 router.get("/*", (req, res) => {
   res.json({
     errorStatus: 404,
-    errorMessage: "OOPS! We couldn't find what you're looking for"
+    errorMessage: "OOPS! We couldn't find what you were looking for"
   });
 });
 

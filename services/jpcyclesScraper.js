@@ -20,24 +20,28 @@ class JPCyclesScraper {
     }
   }
 
-  // TODO
-  // Need to validate the incoming Url and confirm what the client
-  // wants to scrap is actually a JPCycles link
-  validateUrlToScrape() {}
+  /**
+   * Checks to see if a product name was returned after making an
+   * http request to the given webpage
+   * @returns An error specifying the given URL wasn't found
+   */
+  confirmProductPageWasScrapped() {
+    if (this.productName() === "") {
+      throw errorGenerator(
+        404,
+        "The given URL doesn't match a JPCycles Product"
+      );
+    }
+  }
 
   async allApparelInfo(productUrl) {
     try {
       await this.makeHttpRequest(productUrl);
 
       // Axios will typically make a request for a webpage, even if
-      // The client puts in the wrong URL, this IF is an added
+      // The client puts in the wrong URL, this f() call is an added
       // Layer to confirm we did get a particular product
-      if (this.productName() === "") {
-        throw errorGenerator(
-          404,
-          "The given URL doesn't match a JPCycles Product"
-        );
-      }
+      this.confirmProductPageWasScrapped();
 
       const productName = this.productName();
       const price = this.price();
