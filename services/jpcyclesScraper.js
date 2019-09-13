@@ -1,15 +1,26 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
+// Used for creating error obj, that can be them thrown
 const errorGenerator = require("../helpers/errorGenerator");
+// Used to confirm product information was scrapped
+const confirmProductGotten = require("../helpers/confirmProductGotten");
 
+/**
+ * The purpose of this class is to gather all product information
+ * from a J&P Cycles URL - name, price, size, etc.
+ * We do this through a list of useful "private" (not currently set to private) methods
+ * This class has 3 main entry points that will provide product information
+ * depending on the category specified
+ */
 class JPCyclesScraper {
   constructor(response) {
     this.response = response;
   }
 
-  /*
+  /**
    * Make an http request to a given product URL. It stores this response in this.response
+   * @param {string} productUrl The URL of the page we want to scrape
    */
   async makeHttpRequest(productUrl) {
     try {
@@ -21,19 +32,9 @@ class JPCyclesScraper {
   }
 
   /**
-   * Checks to see if a product name was returned after making an
-   * http request to the given webpage
-   * @returns An error specifying the given URL wasn't found
+   * Main entry point for gathering all product information related to apparel
+   * @param {string} productUrl The URL of the page we want to scrape
    */
-  confirmProductPageWasScrapped() {
-    if (this.productName() === "") {
-      throw errorGenerator(
-        404,
-        "The given URL doesn't match a JPCycles Product"
-      );
-    }
-  }
-
   async allApparelInfo(productUrl) {
     try {
       await this.makeHttpRequest(productUrl);
@@ -41,12 +42,12 @@ class JPCyclesScraper {
       // Axios will typically make a request for a webpage, even if
       // The client puts in the wrong URL, this f() call is an added
       // Layer to confirm we did get a particular product
-      this.confirmProductPageWasScrapped();
+      confirmProductGotten(this.productName(), "J&P Cycles");
 
       const productName = this.productName();
       const price = this.price();
       const productSizes = this.productSizes();
-      const reviewInformation = this.productRating();
+      const reviewInformation = this.productReviewInformation();
       const productColors = this.productColors();
       const productImages = this.productImage();
 
@@ -63,6 +64,76 @@ class JPCyclesScraper {
     }
   }
 
+  /**
+   * Main entry point for gathering all product information related to parts
+   * @param {string} productUrl The URL of the page we want to scrape
+   */
+  async allPartInfo(productUrl) {
+    try {
+      await this.makeHttpRequest(productUrl);
+
+      // Axios will typically make a request for a webpage, even if
+      // The client puts in the wrong URL, this f() call is an added
+      // Layer to confirm we did get a particular product
+      confirmProductGotten(this.productName(), "J&P Cycles");
+
+      const productName = this.productName();
+      const price = this.price(true);
+      const reviewInformation = this.productReviewInformation();
+      const productImages = this.productImage();
+
+      return {
+        productName,
+        price,
+        reviewInformation,
+        productImages
+      };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+   * Main entry point for gathering all product information related to tires
+   * @param {string} productUrl The URL of the page we want to scrape
+   */
+  async allTireInfo(productUrl) {
+    try {
+      await this.makeHttpRequest(productUrl);
+
+      // Axios will typically make a request for a webpage, even if
+      // The client puts in the wrong URL, this f() call is an added
+      // Layer to confirm we did get a particular product
+      confirmProductGotten(this.productName(), "J&P Cycles");
+
+      const productName = this.productName();
+      const price = this.price();
+      const tireSize = this.tireSize();
+      const tireLocation = this.tireLocation();
+      const reviewInformation = this.productReviewInformation();
+      const productImages = this.productImage();
+
+      return {
+        productName,
+        price,
+        tireSize,
+        tireLocation,
+        reviewInformation,
+        productImages
+      };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+   * ALL FUNCTIONS BELOW THIS POINT ARE HELPER METHODS
+   * THEY CAN ALSO BE LOOKED AT AS PRIVATE METHODS
+   */
+
+  /**
+   * @returns the name of the product as a string
+   */
   productName() {
     const $ = cheerio.load(this.response.data);
 
@@ -73,18 +144,38 @@ class JPCyclesScraper {
       .trim();
   }
 
-  price() {
+  /**
+   * @param {boolean} isPart Denotes whether we are calling this f() for a part
+   * @returns a price object for the price of the product(s)
+   */
+  price(isPart) {
     const $ = cheerio.load(this.response.data);
 
     const productPriceElement = "div.total-price > span";
+    const fitmentButton = "button.fitment-button";
 
     const productPrice = $(productPriceElement).text();
+
+    // We need to adjust pricing if this is a part & we
+    // also need to confirm if there is a button on the page to select the type
+    // of motorcycle, bc pricing will sometimes vary based on vehicle
+    if (isPart && fitmentButton) {
+      const pricing = {
+        minPrice: productPrice,
+        priceMayVaryBasedOnVehicle: true
+      };
+
+      return pricing;
+    }
 
     return {
       minPrice: productPrice
     };
   }
 
+  /**
+   * @returns an array of product sizes
+   */
   productSizes() {
     const $ = cheerio.load(this.response.data);
 
@@ -115,7 +206,10 @@ class JPCyclesScraper {
     return productSizes;
   }
 
-  productRating() {
+  /**
+   * @returns an object with the review/rating information
+   */
+  productReviewInformation() {
     const $ = cheerio.load(this.response.data);
 
     const ratingElement = "div.show-inline-block.align-middle";
@@ -148,6 +242,11 @@ class JPCyclesScraper {
     };
   }
 
+  /**
+   * Depending on what color information is provided by J&P
+   * This method will return and obj with different props
+   * @returns an object with product color information
+   */
   productColors() {
     const $ = cheerio.load(this.response.data);
 
@@ -168,6 +267,9 @@ class JPCyclesScraper {
     return productColors;
   }
 
+  /**
+   * @returns an object with either main or secondary images of the product
+   */
   productImage() {
     const $ = cheerio.load(this.response.data);
 
@@ -207,11 +309,31 @@ class JPCyclesScraper {
     };
   }
 
-  /*
-   * This method is experimental w/ a planned future version release
-   * Currently J&P lays out their videos in an inconsistent order depending
-   * on the product and there is sometimes multiple videos associated w/
-   * a single product
+  /**
+   * @returns a string of the tire size
+   */
+  tireSize() {
+    const $ = cheerio.load(this.response.data);
+
+    const tireSizeElement = "span.spec-tiresize";
+
+    return $(tireSizeElement).text();
+  }
+
+  /**
+   * @returns a string of the avaialable tire location
+   */
+  tireLocation() {
+    const $ = cheerio.load(this.response.data);
+
+    const tireLocationElement = "span.spec-position";
+
+    return $(tireLocationElement).text();
+  }
+
+  /**
+   * EXPERIMENTAL
+   * May be released in future version
    */
   productVideo() {
     const $ = cheerio.load(this.response.data);

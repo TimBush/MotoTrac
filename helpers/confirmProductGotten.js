@@ -7,7 +7,7 @@ const errorGenerator = require("./errorGenerator");
  * @returns An Error if there is no product name
  */
 module.exports = (productName, website) => {
-  if (productName === "") {
+  if (productName === "" || !productName) {
     throw errorGenerator(
       404,
       `The given URL doesn't match a ${website} product`

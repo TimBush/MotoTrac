@@ -1,9 +1,3 @@
-/*
- * The point of this class is to assist in scraping Revzilla
- * We can scrap for apparel, parts, & tires
- * We then compile all the information and return it in a obj
- */
-
 const axios = require("axios");
 const cheerio = require("cheerio");
 
@@ -12,16 +6,19 @@ const confirmProductGotten = require("../helpers/confirmProductGotten");
 
 /**
  * The purpose of this class is to gather all product information
- * from Revzilla - name, price, size, etc.
+ * from a Revzilla URL - name, price, size, etc.
+ * We do this through a list of useful "private" (not currently set to private) methods
+ * This class has 3 main entry points that will provide product information
+ * depending on the category specified
  */
 class RevzillaScraper {
   constructor(response) {
     this.response = response;
   }
 
-  /*
-   * The purpose of this f() is to make an http request
-   * to a given product URL.  It stores this response in this.response
+  /**
+   * Make an http request to a given product URL. It stores this response in this.response
+   * @param {string} productUrl The URL of the page we want to scrape
    */
   async makeHttpRequest(productUrl) {
     try {
@@ -32,13 +29,116 @@ class RevzillaScraper {
     }
   }
 
-  /*
-   * The purpose of this f() is to get a given
-   * produts price
-   * @param isPart - Boolean - Specifies if we're looking for the price of a part or apparel
-   * @returns obj - product price
+  /**
+   * Main entry point for gathering all product information related to apparel
+   * @param {string} productUrl The URL of the page we want to scrape
+   */
+  async allApparelInfo(productUrl) {
+    try {
+      // Make HTTP request to the given web page
+      await this.makeHttpRequest(productUrl);
+
+      // Axios will typically make a request for a webpage, even if
+      // The client puts in the wrong URL, this IF is an added
+      // Layer to confirm we did get a particular product
+      confirmProductGotten(this.productName(), "Revzilla");
+
+      // Gather all product information specific to apparel
+      const productName = this.productName();
+      const productSizes = this.productSizes();
+      const price = this.price();
+      const reviewInformation = this.productRating();
+      const productImages = this.productImage();
+      const productColors = this.productVariations();
+
+      return {
+        productName,
+        productSizes,
+        productColors,
+        price,
+        reviewInformation,
+        productImages
+      };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+   * Main entry point for gathering all product information related to parts
+   * @param {string} productUrl The URL of the page we want to scrape
+   */
+  async allPartInfo(productUrl) {
+    try {
+      // Make HTTP request to the given web page
+      await this.makeHttpRequest(productUrl);
+
+      // Axios will typically make a request for a webpage, even if
+      // The client puts in the wrong URL, this IF is an added
+      // Layer to confirm we did get a particular product
+      confirmProductGotten(this.productName(), "Revzilla");
+
+      // Gather all product information
+      const productName = this.productName();
+      const price = this.price(true);
+      const reviewInformation = this.productRating();
+      const productImages = this.productImage();
+
+      return {
+        productName,
+        price,
+        reviewInformation,
+        productImages
+      };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+   * Main entry point for gathering all product information related to tires
+   * @param {string} productUrl The URL of the page we want to scrape
+   */
+  async allTireInfo(productUrl) {
+    try {
+      // Make HTTP request to the given web page
+      await this.makeHttpRequest(productUrl);
+
+      // Axios will typically make a request for a webpage, even if
+      // The client puts in the wrong URL, this IF is an added
+      // Layer to confirm we did get a particular product
+      confirmProductGotten(this.productName(), "Revzilla");
+
+      // Gather all product information
+      const productName = this.productName();
+      const price = this.price();
+      const tireSizes = this.productSizes();
+      const tireLocations = this.productVariations();
+      const reviewInformation = this.productRating();
+      const productImages = this.productImage();
+
+      return {
+        productName,
+        tireSizes,
+        tireLocations,
+        price,
+        reviewInformation,
+        productImages
+      };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  /**
+   * ALL FUNCTIONS BELOW THIS POINT ARE HELPER METHODS
+   * THEY CAN ALSO BE LOOKED AT AS PRIVATE METHODS
    */
 
+  /**
+   * @param {boolean} isPart Denotes whether we are calling this f() for a part
+   * @returns a price object for the price of the product(s)
+   */
   price(isPart) {
     const $ = cheerio.load(this.response.data);
 
@@ -55,18 +155,19 @@ class RevzillaScraper {
     // We need to see if the first pricing elem is not the same as the second
     // if it's not we know that there is a price range for this product that
     // is typically dependent on the size the client picks
+    // *note price can also vary depending on color (i.e helmet face shields)
     // If they are the same, we know the price is fixed no matter the size
     if (firstPriceText !== lastPriceText) {
       const pricing = {
         minPrice: firstPriceText,
         maxPrice: lastPriceText,
-        priceDependentOnSize: true
+        priceDependentOnVersionChosen: true
       };
 
-      // If is part was set to true we want to change the pricing obj
+      // If isPart was set to true we want to change the pricing obj
       // so that a different pricing key is denoted
       if (isPart) {
-        delete pricing.priceDependentOnSize;
+        delete pricing.priceDependentOnVersionChosen;
         pricing.priceIsDependentOnVehicle = true;
       }
 
@@ -78,10 +179,8 @@ class RevzillaScraper {
     };
   }
 
-  /*
-   * The purpose of this f() is to get a given
-   * produts name
-   * @returns string - the product name
+  /**
+   * @returns the name of the product as a string
    */
   productName() {
     const $ = cheerio.load(this.response.data);
@@ -93,9 +192,8 @@ class RevzillaScraper {
     return productName;
   }
 
-  /*
-   * Get the product image for a product
-   * @returns string - the product image source link
+  /**
+   * @returns an object with the main image of the product
    */
   productImage() {
     const $ = cheerio.load(this.response.data);
@@ -109,9 +207,8 @@ class RevzillaScraper {
     };
   }
 
-  /*
-   * The purpose of this f() is to get available product sizes
-   * @returns array - the product sizes
+  /**
+   * @returns an array of product sizes
    */
   productSizes() {
     const $ = cheerio.load(this.response.data);
@@ -144,10 +241,10 @@ class RevzillaScraper {
     return productSizes;
   }
 
-  /*
-   * The purpose of this f() is to get available product variations
+  /**
+   * Get available product variations
    * With Revzilla it's typically color or wheel location
-   * @returns array - the product color(s) or wheel location(s)
+   * @returns an array of product color(s) or wheel location(s)
    */
   productVariations() {
     const $ = cheerio.load(this.response.data);
@@ -173,9 +270,8 @@ class RevzillaScraper {
     return productVariations;
   }
 
-  /*
-   * The purpose of this f() is to get the product rating
-   * @returns int - the product rating
+  /**
+   * @returns an object with the review/rating information
    */
   productRating() {
     const $ = cheerio.load(this.response.data);
@@ -201,7 +297,10 @@ class RevzillaScraper {
     };
   }
 
-  // EXPERIMENTAL, will be implmented in future versions
+  /**
+   * EXPERIMENTAL
+   * May be released in future version
+   */
   productVideo() {
     const $ = cheerio.load(this.response.data);
 
@@ -221,103 +320,6 @@ class RevzillaScraper {
       });
 
     return videoUrl;
-  }
-
-  /*
-   * The purpose of this f() is to get all the product info
-   * for APPAREL by calling all the information specific functions
-   * and then return a compiled obj of all the products information
-   * @returns obj - all the product information for apparel
-   */
-  async allApparelInfo(productUrl) {
-    try {
-      // Make HTTP request to the given web page
-      await this.makeHttpRequest(productUrl);
-
-      // Axios will typically make a request for a webpage, even if
-      // The client puts in the wrong URL, this IF is an added
-      // Layer to confirm we did get a particular product
-      confirmProductGotten(this.productName(), "Revzilla");
-
-      // Gather all product information specific to apparel
-      const productName = this.productName();
-      const productSizes = this.productSizes();
-      const price = this.price();
-      const reviewInformation = this.productRating();
-      const imageSource = this.productImage();
-      const productColors = this.productVariations();
-
-      return {
-        productName,
-        productSizes,
-        productColors,
-        price,
-        reviewInformation,
-        imageSource
-      };
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  /*
-   * The purpose of this f() is to get all the product info
-   * for PARTS by calling all the information specific functions
-   * and then return a compiled obj of all the products information
-   * @returns obj - all the product information specific to parts
-   */
-  async allPartInfo(productUrl) {
-    try {
-      // Make HTTP request to the given web page
-      await this.makeHttpRequest(productUrl);
-
-      // Gather all product information
-      const productName = this.productName();
-      const price = this.price(true);
-      const reviewInformation = this.productRating();
-      const imageSource = this.productImage();
-
-      return {
-        productName,
-        price,
-        reviewInformation,
-        imageSource
-      };
-    } catch (err) {
-      return errorGenerator(err.response.status);
-    }
-  }
-
-  /*
-   * The purpose of this f() is to get all the product info
-   * for TIRES by calling all the information specific functions
-   * and then return a compiled obj of all the products information
-   * @returns obj - all the product information specific to tires
-   */
-  async allTireInfo(productUrl) {
-    try {
-      // Make HTTP request to the given web page
-      await this.makeHttpRequest(productUrl);
-
-      // Gather all product information
-      const productName = this.productName();
-      const price = this.price();
-      const productSizes = this.productSizes();
-      const productTireLocations = this.productVariations();
-      const reviewInformation = this.productRating();
-      const imageSource = this.productImage();
-
-      return {
-        productName,
-        productSizes,
-        productTireLocations,
-        price,
-        reviewInformation,
-        imageSource
-      };
-    } catch (err) {
-      return errorGenerator(err.response.status);
-    }
   }
 }
 
