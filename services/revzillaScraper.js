@@ -323,4 +323,4 @@ class RevzillaScraper {
   }
 }
 
-module.exports.revzillaScraper = new RevzillaScraper();
+module.exports.RevScraper = RevzillaScraper;

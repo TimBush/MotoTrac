@@ -4,10 +4,13 @@ const express = require("express");
 
 const router = express.Router();
 
-const { revzillaScraper } = require("../services/revzillaScraper");
-const { jpcyclesScraper } = require("../services/jpcyclesScraper");
-const errorGenerator = require("../helpers/errorGenerator");
+const { RevScraper } = require("../services/revzillaScraper");
+const { JpScraper } = require("../services/jpcyclesScraper");
 const determineProduct = require("../helpers/determineProduct");
+
+// Intialize new instances of each scraper for use in routing
+const jpcyclesScraper = new JpScraper();
+const revzillaScraper = new RevScraper();
 
 router.get("/revzilla/:category", async (req, res, next) => {
   try {

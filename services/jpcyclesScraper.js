@@ -347,4 +347,4 @@ class JPCyclesScraper {
   }
 }
 
-module.exports.jpcyclesScraper = new JPCyclesScraper();
+module.exports.JpScraper = JPCyclesScraper;
