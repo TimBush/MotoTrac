@@ -1,3 +1,9 @@
+/**
+ * This module is meant to control all the routes
+ * By keeping them in one place, we give app.js a single point of entry
+ * into the routes
+ */
+
 const home = require("../routes/index");
 const products = require("../routes/product");
 const error404 = require("../routes/404");

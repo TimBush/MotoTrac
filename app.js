@@ -9,8 +9,6 @@ app.listen(port, () => {
   console.log(`Server Started - Listening on port ${port} `);
 });
 
-app.set("view engine", "pug");
-
 require("./startup/routes")(app);
 
 // Catch-all error Handler

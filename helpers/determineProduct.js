@@ -1,3 +1,10 @@
+/**
+ * The purpose of this module is to route the category specified in the param
+ * through the correct Class method, so that we can get all the product information
+ * It calls the correct scraper & scraper method and then returns
+ * all the product info
+ */
+
 const errorGenerator = require("../helpers/errorGenerator");
 
 /**
